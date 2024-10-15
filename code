@@ -1,0 +1,67 @@
+import json
+import matplotlib.pyplot as plt
+
+class FatigueCalculator:
+    def __init__(self):
+        self.data = []
+
+    def calculate_fatigue(self, number_of_jumps, steps, landed, academic_fatigue, sleep_hours):
+        jump_weight = 1.5
+        steps_weight = 0.05
+        land_weight = 2
+        academic_weight = 1.2
+        sleep_weight = -1
+
+        jump_fatigue = number_of_jumps * jump_weight
+        steps_fatigue = steps * steps_weight
+        land_fatigue = land_weight if landed else 0
+        academic_fatigue_score = academic_fatigue * academic_weight
+        sleep_fatigue = (8 - sleep_hours) * sleep_weight
+
+        total_fatigue = (jump_fatigue + steps_fatigue + land_fatigue +
+                         academic_fatigue_score + sleep_fatigue)
+        fatigue_level = max(0, min(total_fatigue, 100))
+        self.data.append(fatigue_level)
+        return fatigue_level
+
+    def save_data(self, filename='fatigue_data.json'):
+        with open(filename, 'w') as file:
+            json.dump(self.data, file)
+        print(f"Data saved to {filename}.")
+
+    def load_data(self, filename='fatigue_data.json'):
+        try:
+            with open(filename, 'r') as file:
+                self.data = json.load(file)
+            print(f"Data loaded from {filename}.")
+        except FileNotFoundError:
+            print(f"No previous data found at {filename}. Starting fresh.")
+
+    def plot_data(self):
+        plt.plot(self.data, marker='o', linestyle='-', color='b')
+        plt.title("Fatigue Levels Over Time")
+        plt.xlabel("Session Number")
+        plt.ylabel("Fatigue Level")
+        plt.ylim(0, 100)
+        plt.show()
+
+# Example usage
+calculator = FatigueCalculator()
+calculator.load_data()  # Load past data if available
+
+try:
+    number_of_jumps = int(input("Enter the number of jumps: "))
+    steps = int(input("Enter the total number of steps: "))
+    landed_input = input("Did you land during the session? (yes/no): ").strip().lower()
+    landed = landed_input == 'yes'
+    academic_fatigue = int(input("Enter your academic/outside fatigue level (1-5): "))
+    sleep_hours = float(input("Enter the number of hours you slept: "))
+
+    fatigue_level = calculator.calculate_fatigue(number_of_jumps, steps, landed, academic_fatigue, sleep_hours)
+    print(f"\nAnticipated Fatigue Level: {fatigue_level}")
+
+    calculator.save_data()  # Save the current session's data
+    calculator.plot_data()  # Visualize the fatigue levels
+
+except ValueError:
+    print("Please enter valid numeric values where required.")
